@@ -34,7 +34,7 @@ if public_numbers.e != 65537:
     exit("error: RSA key exponent must be 65537")
 
 n = public_numbers.n
-n_bytes = int.to_bytes(n, length=0x100)
+n_bytes = int.to_bytes(n, length=0x100, byteorder="big")
 
 b = pow(2, 32)
 n0inv = -(pow(n, -1, b)) & 0xffffffff
@@ -47,7 +47,7 @@ for i in range(len(n_bytes) >> 2):
 
 r = pow(2, 2048)
 r = pow(r, 2, n)
-r_bytes = int.to_bytes(r, length=0x100)
+r_bytes = int.to_bytes(r, length=0x100, byteorder="big")
 
 for i in range(len(r_bytes) >> 2):
     offset = len(r_bytes) - (i * 4) - 4
