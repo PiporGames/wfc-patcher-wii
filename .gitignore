@@ -51,3 +51,5 @@ launcher/build
 *.dol
 *.wad
 *.app
+misc/private-key-OUT.pem
+misc/wwfcPayloadPublicKey-OUT.hpp

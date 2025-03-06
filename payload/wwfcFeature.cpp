@@ -45,7 +45,11 @@ const wchar_t* OpenHostPage::s_openHostPromptMessages[RVL::SCLanguageCount] = {
     L"Cette fonctionnalité permet aux joueurs qui\n"
     L"ajoutent votre code ami de vous rejoindre,\n"
     L"même si vous ne les avez pas ajoutés.",
-    nullptr,
+    L"¿Habilitar Open Host?\n"  
+	L"\n"  
+	L"Esta función permite que los jugadores\n"  
+	L"que agreguen tu código de amigo se reúnan contigo,\n"  
+	L"incluso si no los agregas de vuelta.",
     nullptr,
     nullptr,
     nullptr,
@@ -65,7 +69,10 @@ const wchar_t* OpenHostPage::s_connectionLostMessages[RVL::SCLanguageCount] = {
     L"au serveur.\n"
     L"\n"
     L"Veuillez réessayer ultérieurement.",
-    nullptr,
+    L"Has perdido la conexión con\n"
+    L"el servidor.\n"
+    L"\n"
+    L"Por favor, intentelo de nuevo luego.",
     nullptr,
     nullptr,
     nullptr,
@@ -77,7 +84,7 @@ const wchar_t* OpenHostPage::s_openHostEnabledMessages[RVL::SCLanguageCount] = {
     L"Open Host is now enabled!",
     nullptr,
     L"Open Host est maintenant activé!",
-    nullptr,
+    L"¡Open Host está ahora activado!",
     nullptr,
     nullptr,
     nullptr,
@@ -90,7 +97,7 @@ const wchar_t* OpenHostPage::s_openHostDisabledMessages[RVL::SCLanguageCount] =
         L"Open Host is now disabled!",
         nullptr,
         L"Open Host est maintenant désactivé!",
-        nullptr,
+        L"¡Open Host está ahora desactivado!",
         nullptr,
         nullptr,
         nullptr,
@@ -99,7 +106,7 @@ const wchar_t* OpenHostPage::s_openHostDisabledMessages[RVL::SCLanguageCount] =
 };
 
 const wchar_t* WifiMenuPage::s_messageOfTheDay =
-    L"Welcome to\nWiiLink Wi-Fi Connection!";
+    L"¡Bienvenido a la\nPiporGames Network® WFC!";
 wchar_t WifiMenuPage::s_messageOfTheDayBuffer[256] = {};
 bool WifiMenuPage::s_hasSeenMessageOfTheDay = false;
 
