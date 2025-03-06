@@ -12,7 +12,9 @@ that makes patches to the running game, including important security patches and
 Each directory includes its own README file with more detailed information on the section.
 
 Working with Python 3.10. Use make.sh -all to generate all content.  
-This fork has been setup to only generate MKWii patches.
+
+> [!IMPORTANT]  
+> This wwfc repo has been modified to use custom server name branding. You may want to modify the source to revert those changes, or cherry pick only the commits you want.
 
 # License
 Unless a file explicitly states otherwise, everything in this repository is licensed under a custom BSD-style
