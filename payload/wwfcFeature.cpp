@@ -132,7 +132,7 @@ GetMessageOfTheDay(GameSpy::GPResult gpResult, const char* message)
         return gpResult;
     }
 
-    const char motdKey[] = "\\wwfc_motd\\";
+    const char motdKey[] = "\\wl:motd\\";
     char value[512];
     if (!GameSpy::gpiValueForKey(message, motdKey, value, sizeof(value))) {
         return gpResult;
@@ -303,9 +303,9 @@ WWFC_DEFINE_PATCH = {
                 selectHandler->sendPacket().engineClass;
 
             wwfc::GPReport::ReportU32(
-                "mkw_select_course", static_cast<u32>(selectedCourse)
+                "wl:mkw_select_course", static_cast<u32>(selectedCourse)
             );
-            wwfc::GPReport::ReportU32("mkw_select_cc", static_cast<u32>(engineClass));
+            wwfc::GPReport::ReportU32("wl:mkw_select_cc", static_cast<u32>(engineClass));
         }
         // clang-format on
     ),
