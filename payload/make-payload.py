@@ -7,29 +7,31 @@ path_cc = os.path.join(devkitppc, "bin", "powerpc-eabi-gcc")
 path_objcopy = os.path.join(devkitppc, "bin", "powerpc-eabi-objcopy")
 
 extra_build_flags = []
+silent = False
 
 def build(game):
-    print(game["Title"])
+    if not silent:
+        print(game["Title"])
 
     flags = []
     flags.append("-D" + game["Title"] + "=1")
 
     title_str = game["Title"]
-    flags.append("-DPAYLOAD_NAME=\"" + title_str + "\"")
-    flags.append("-DGAME_ID=0x" + title_str[:4].encode("ascii").hex() + "")
+    flags.append("-DWWFC_PAYLOAD_NAME=\"" + title_str + "\"")
+    flags.append("-DWWFC_GAME_ID=0x" + title_str[:4].encode("ascii").hex() + "")
 
     if title_str[4] == 'D':
-        flags.append("-DTITLE_TYPE=TITLE_TYPE_DISC")
+        flags.append("-DWWFC_TITLE_TYPE=WWFC_TITLE_TYPE_DISC")
     else:
-        flags.append("-DTITLE_TYPE=TITLE_TYPE_NAND")
+        flags.append("-DWWFC_TITLE_TYPE=WWFC_TITLE_TYPE_NAND")
 
-    flags.append("-DTITLE_VERSION=0x" + title_str[5:])
+    flags.append("-DWWFC_TITLE_VERSION=0x" + title_str[5:])
 
     for key, value in game.items():
         if key != "Title":
             flags.append("-D" + key + "=" + value)
 
-    flags += ["-g", "-Os", "-fPIE", "-std=c++20", '-Wall', '-Werror', "-Wsuggest-override", "-n", "-fno-rtti", "-fno-exceptions", "-fno-sized-deallocation", "-ffunction-sections", "-fdata-sections", "-fshort-wchar", "-Wl,--gc-sections", "-Wno-address-of-packed-member", "-fno-threadsafe-statics"]
+    flags += ["-save-temps", "-fverbose-asm", "-g", "-Os", "-fPIE", "-std=c++20", "-nostdinc", "-nostdinc++", "-Wall", "-Werror", "-fno-threadsafe-statics", "-Wsuggest-override", "-n", "-fno-rtti", "-fno-exceptions", "-fno-sized-deallocation", "-ffunction-sections", "-fdata-sections", "-fshort-wchar", "-Wl,--gc-sections", "-Wno-address-of-packed-member"]
     flags += extra_build_flags
 
     out_path = os.path.join("build", game["Title"])
@@ -71,6 +73,8 @@ if __name__ == "__main__":
             title_id = argv[i][2:]
         elif argv[i].startswith("-D"):
             extra_build_flags.append(argv[i])
+        elif argv[i] == "-s":
+            silent = True
 
     if title_id != "":
         map_game_list = []

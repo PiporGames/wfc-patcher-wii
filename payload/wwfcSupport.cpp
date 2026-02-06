@@ -1,7 +1,6 @@
 #include "import/revolution.h"
 #include "wwfcLog.hpp"
 #include "wwfcPatch.hpp"
-#include <cstring>
 
 namespace wwfc::Support
 {
@@ -9,11 +8,11 @@ namespace wwfc::Support
 static_assert(sizeof(WWFC_DOMAIN) <= sizeof("nintendowifi.net"));
 
 // Unpatch the auth response hook
-WWFC_DEFINE_PATCH = {Patch::Write(
+WWFC_DEFINE_PATCH = Patch::Write(
     WWFC_PATCH_LEVEL_SUPPORT, //
     ADDRESS_AUTH_HANDLERESP_HOOK, //
-    (u32[]){AUTH_HANDLERESP_UNPATCH}
-)};
+    (u32[]) {AUTH_HANDLERESP_UNPATCH}
+);
 
 static const char* FixHostname(const char* name, char* out)
 {
@@ -33,7 +32,7 @@ static const char* FixHostname(const char* name, char* out)
             std::memcpy(out, name, i);
             std::memcpy(out + i, replace, replaceSize);
             std::strcpy(out + i + replaceSize, name + i + checkSize);
-            LOG_INFO_FMT("Hostname: %s -> %s", name, out);
+            WWFC_LOG_INFO_FMT("Hostname: %s -> %s", name, out);
             return true;
         };
 
@@ -53,7 +52,7 @@ static const char* FixHostname(const char* name, char* out)
             return out;
         }
 
-        // WWFC patch over an already Wiimmfi patched game
+        // WiiLink WFC patch over an already Wiimmfi patched game
         if (replaceDomain(
                 "wiimmfi.de", sizeof("wiimmfi.de") - 1, WWFC_DOMAIN,
                 sizeof(WWFC_DOMAIN) - 1
@@ -71,88 +70,87 @@ WWFC_DEFINE_CTR_STUB( //
     void* gethostbyname(const char* name),
 
     // clang-format off
-    stwu    sp, -0x30(sp);
+    stwu    r1, -0x30(r1);
     mflr    r0;
-    stw     r0, 0x34(sp);
-    addi    r11, sp, 0x30;
+    stw     r0, 0x34(r1);
+    addi    r11, r1, 0x30;
     // clang-format on
 )
 
-WWFC_DEFINE_PATCH = {Patch::BranchWithCTR(
+WWFC_DEFINE_PATCH = Patch::BranchWithCTR(
     WWFC_PATCH_LEVEL_SUPPORT, //
     ADDRESS_gethostbyname, //
     [](char* name) -> void* {
-        char fixedName[256];
-        return gethostbyname(FixHostname(name, fixedName));
-    }
-)};
+    char fixedName[256];
+    return gethostbyname(FixHostname(name, fixedName));
+}
+);
 
 WWFC_DEFINE_CTR_STUB( //
     ADDRESS_SOInetAtoN + 0x10, //
     u32 SOInetAtoN(const char* name, u8* param_2),
 
     // clang-format off
-    stwu    sp, -0x30(sp);
+    stwu    r1, -0x30(r1);
     mflr    r0;
-    stw     r0, 0x34(sp);
-    addi    r11, sp, 0x30;
+    stw     r0, 0x34(r1);
+    addi    r11, r1, 0x30;
     // clang-format on
 )
 
-WWFC_DEFINE_PATCH = {Patch::BranchWithCTR(
+WWFC_DEFINE_PATCH = Patch::BranchWithCTR(
     WWFC_PATCH_LEVEL_SUPPORT, //
     ADDRESS_SOInetAtoN, //
     [](const char* name, u8* param_2) -> u32 {
-        char fixedName[256];
-        return SOInetAtoN(FixHostname(name, fixedName), param_2);
-    }
-)};
+    char fixedName[256];
+    return SOInetAtoN(FixHostname(name, fixedName), param_2);
+}
+);
 
 WWFC_DEFINE_CTR_STUB( //
     ADDRESS_SOGetAddrInfo + 0x10, //
     u32 SOGetAddrInfo(const char* name, u32 param_2, u32 param_3, u32 param_4),
 
     // clang-format off
-    stwu    sp, -0x40(sp);
+    stwu    r1, -0x40(r1);
     mflr    r0;
-    stw     r0, 0x44(sp);
-    addi    r11, sp, 0x40;
+    stw     r0, 0x44(r1);
+    addi    r11, r1, 0x40;
     // clang-format on
 )
 
-WWFC_DEFINE_PATCH = {Patch::BranchWithCTR(
+WWFC_DEFINE_PATCH = Patch::BranchWithCTR(
     WWFC_PATCH_LEVEL_SUPPORT, //
     ADDRESS_SOGetAddrInfo, //
     [](const char* name, u32 param_2, u32 param_3, u32 param_4) -> u32 {
-        char fixedName[256];
-        return SOGetAddrInfo(
-            FixHostname(name, fixedName), param_2, param_3, param_4
-        );
-    }
-)};
+    char fixedName[256];
+    return SOGetAddrInfo(
+        FixHostname(name, fixedName), param_2, param_3, param_4
+    );
+}
+);
 
 // Disable SSL in NHTTP
-WWFC_DEFINE_PATCH = {
-    Patch::WriteASM(
-        WWFC_PATCH_LEVEL_SUPPORT, //
-        ADDRESS_NHTTP_HTTPS_PORT_PATCH, //
-        1, ASM_LAMBDA(li r0, 80)
-    ),
-    Patch::WriteASM(
-        WWFC_PATCH_LEVEL_SUPPORT, //
-        ADDRESS_NHTTPi_SocSSLConnect, //
-        2, ASM_LAMBDA(li r3, 0; blr)
-    ),
-};
+
+WWFC_DEFINE_PATCH = Patch::WriteASM(
+    WWFC_PATCH_LEVEL_SUPPORT, //
+    ADDRESS_NHTTP_HTTPS_PORT_PATCH, //
+    1, ASM_LAMBDA((), li r0, 80)
+);
+WWFC_DEFINE_PATCH = Patch::WriteASM(
+    WWFC_PATCH_LEVEL_SUPPORT, //
+    ADDRESS_NHTTPi_SocSSLConnect, //
+    2, ASM_LAMBDA((), li r3, 0; blr)
+);
 
 #if ADDRESS_GHIPARSEURL_HTTPS_PATCH
 
 // Disable SSL in GameSpy HTTP
-WWFC_DEFINE_PATCH = {Patch::WriteASM(
+WWFC_DEFINE_PATCH = Patch::WriteASM(
     WWFC_PATCH_LEVEL_SUPPORT, //
     ADDRESS_GHIPARSEURL_HTTPS_PATCH, //
-    1, ASM_LAMBDA(li r0, 0)
-)};
+    1, ASM_LAMBDA((), li r0, 0)
+);
 
 #endif
 

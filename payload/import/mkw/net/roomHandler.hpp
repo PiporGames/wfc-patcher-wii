@@ -1,11 +1,10 @@
 #pragma once
 
-#include <wwfcUtil.h>
-
-namespace mkw::Net
-{
-
 #if RMC
+
+
+namespace wwfc::mkw::Net
+{
 
 // https://github.com/SeekyCt/mkw-structures/blob/master/roomhandler.h
 class RoomHandler
@@ -33,12 +32,13 @@ public:
 private:
     /* 0x00 */ u8 _00[0x80 - 0x00];
 
-    static RoomHandler* s_instance
-        AT(RMCXD_PORT(0x809C20E0, 0x809BD920, 0x809C1140, 0x809B0720));
+    static RoomHandler* s_instance AT(
+        RMCXD_PORT(0x809C20E0, 0x809BD920, 0x809C1140, 0x809B0720, DEMOTODO)
+    );
 };
 
 static_assert(sizeof(RoomHandler) == 0x80);
 
-#endif
+} // namespace wwfc::mkw::Net
 
-} // namespace mkw::Net
+#endif // RMC

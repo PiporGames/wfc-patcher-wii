@@ -1,11 +1,11 @@
 #pragma once
 
-#include "import/egg/vector.hpp"
-
-namespace mkw::System
-{
-
 #if RMC
+
+#  include "import/egg/vector.hpp"
+
+namespace wwfc::mkw::System
+{
 
 // https://github.com/riidefi/mkw/blob/master/source/game/system/CourseMap.hpp#L359-L373
 class MapdataCannonPoint
@@ -45,7 +45,7 @@ class MapdataItemPoint
 public:
     struct Data {
         /* 0x00 */ EGG::Vector3f position;
-        /* 0x0C */ f32 deviation;
+        /* 0x0C */ float deviation;
         /* 0x10 */ u16 parameters[2];
     };
 
@@ -63,6 +63,6 @@ private:
 
 static_assert(sizeof(MapdataItemPoint) == 0x14);
 
-#endif
+} // namespace wwfc::mkw::System
 
-} // namespace mkw::System
+#endif // RMC

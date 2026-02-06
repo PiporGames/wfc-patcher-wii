@@ -1,13 +1,12 @@
 #pragma once
 
-#include "import/mkw/item.hpp"
-#include <cstddef>
-#include <wwfcUtil.h>
-
-namespace mkw::Net
-{
-
 #if RMC
+
+#  include "import/mkw/item.hpp"
+#  include "wwfcLibC.hpp"
+
+namespace wwfc::mkw::Net
+{
 
 // https://github.com/SeekyCt/mkw-structures/blob/master/eventhandler.h
 class EventHandler
@@ -108,7 +107,7 @@ public:
 
         bool containsInvalidItemObject() const
         {
-            for (size_t n = 0; n < sizeof(eventInfo); n++) {
+            for (std::size_t n = 0; n < sizeof(eventInfo); n++) {
                 if (!eventInfo[n].isItemObjectValid()) {
                     return true;
                 }
@@ -119,9 +118,9 @@ public:
 
         bool isValid(u8 packetSize, u8 playerAid) const
         {
-            size_t expectedPacketSize = sizeof(eventInfo);
+            std::size_t expectedPacketSize = sizeof(eventInfo);
 
-            for (size_t n = 0; n < sizeof(eventInfo); n++) {
+            for (std::size_t n = 0; n < sizeof(eventInfo); n++) {
                 if (!eventInfo[n].isValid()) {
                     return false;
                 }
@@ -134,7 +133,7 @@ public:
             }
 
             expectedPacketSize = 0;
-            for (size_t n = 0; n < sizeof(eventInfo); n++) {
+            for (std::size_t n = 0; n < sizeof(eventInfo); n++) {
                 EventInfo info = eventInfo[n];
                 u8 itemObject = info.itemObject;
                 const u8* data = eventData + expectedPacketSize;
@@ -167,9 +166,12 @@ public:
     static u8
     GetEventDataSize(u8 itemObject, Packet::EventInfo::EventType eventType)
     {
-        LONGCALL u8 GetEventDataSize(
+        [[gnu::longcall]] u8 GetEventDataSize(
             u8 itemObject, Packet::EventInfo::EventType eventType
-        ) AT(RMCXD_PORT(0x8079D76C, 0x80794760, 0x8079CDD8, 0x8078BB2C));
+        )
+            AT(RMCXD_PORT(
+                0x8079D76C, 0x80794760, 0x8079CDD8, 0x8078BB2C, DEMOTODO
+            ));
 
         return GetEventDataSize(itemObject, eventType);
     }
@@ -182,12 +184,13 @@ public:
 private:
     /* 0x0000 */ u8 _0000[0x2B88 - 0x0000];
 
-    static EventHandler* s_instance
-        AT(RMCXD_PORT(0x809C20F0, 0x809BD928, 0x809C1150, 0x809B0730));
+    static EventHandler* s_instance AT(
+        RMCXD_PORT(0x809C20F0, 0x809BD928, 0x809C1150, 0x809B0730, DEMOTODO)
+    );
 };
 
 static_assert(sizeof(EventHandler) == 0x2B88);
 
-#endif
+} // namespace wwfc::mkw::Net
 
-} // namespace mkw::Net
+#endif // RMC

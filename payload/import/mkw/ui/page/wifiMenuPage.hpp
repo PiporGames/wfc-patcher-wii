@@ -1,13 +1,13 @@
 #pragma once
 
-#include "import/mkw/ui/section/sectionManager.hpp"
-#include "messagePopupPage.hpp"
-#include <cstddef>
-
-namespace mkw::UI
-{
-
 #if RMC
+
+#  include "import/mkw/ui/section/sectionManager.hpp"
+#  include "messagePopupPage.hpp"
+#  include "wwfcLibC.hpp"
+
+namespace wwfc::mkw::UI
+{
 
 class WifiMenuPage : public Page
 {
@@ -32,7 +32,7 @@ public:
         return s_messageOfTheDayBuffer;
     }
 
-    static size_t MessageOfTheDayBufferSize()
+    static std::size_t MessageOfTheDayBufferSize()
     {
         return sizeof(s_messageOfTheDayBuffer);
     }
@@ -62,18 +62,12 @@ private:
 
 static_assert(sizeof(WifiMenuPage) == 0xF34);
 
-#endif
-
-} // namespace mkw::UI
-
-#if RMC
-
-extern "C" {
-__attribute__((__used__)) static void
+inline void
 WifiMenuPage_showMessageOfTheDay(mkw::UI::WifiMenuPage* wifiMenuPage)
 {
     wifiMenuPage->showMessageOfTheDay();
 }
-}
 
-#endif
+} // namespace wwfc::mkw::UI
+
+#endif // RMC

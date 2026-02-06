@@ -1,13 +1,12 @@
 #pragma once
 
-#include "import/mkw/ui/ui.hpp"
-#include "page.hpp"
-#include <wwfcUtil.h>
-
-namespace mkw::UI
-{
-
 #if RMC
+
+#  include "import/mkw/ui/ui.hpp"
+#  include "page.hpp"
+
+namespace wwfc::mkw::UI
+{
 
 // https://github.com/mkw-sp/mkw-sp/blob/main/payload/game/ui/YesNoPage.hh
 class YesNoPage : public Page
@@ -52,10 +51,13 @@ public:
 
     void setWindowMessage(u32 messageId, FormatParam* formatParam = nullptr)
     {
-        LONGCALL void setWindowMessage(
+        [[gnu::longcall]] void setWindowMessage(
             YesNoPage * yesNoPage, u32 messageId,
             FormatParam* formatParam = nullptr
-        ) AT(RMCXD_PORT(0x806525FC, 0x8061EBE8, 0x80651C68, 0x80640914));
+        )
+            AT(RMCXD_PORT(
+                0x806525FC, 0x8061EBE8, 0x80651C68, 0x80640914, DEMOTODO
+            ));
 
         setWindowMessage(this, messageId, formatParam);
     }
@@ -65,10 +67,13 @@ public:
         IHandler* handler
     )
     {
-        LONGCALL void configureButton(
+        [[gnu::longcall]] void configureButton(
             YesNoPage * yesNoPage, u32 index, u32 messageId,
             FormatParam * formatParam, Animation animation, IHandler * handler
-        ) AT(RMCXD_PORT(0x80652604, 0x8061EBF0, 0x80651C70, 0x8064091C));
+        )
+            AT(RMCXD_PORT(
+                0x80652604, 0x8061EBF0, 0x80651C70, 0x8064091C, DEMOTODO
+            ));
 
         configureButton(
             this, index, messageId, formatParam, animation, handler
@@ -88,6 +93,6 @@ private:
 
 static_assert(sizeof(YesNoPage) == 0x8B8);
 
-#endif
+} // namespace wwfc::mkw::UI
 
-} // namespace mkw::UI
+#endif // RMC

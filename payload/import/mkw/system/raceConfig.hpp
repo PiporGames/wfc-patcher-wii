@@ -1,11 +1,9 @@
 #pragma once
 
-#include <wwfcUtil.h>
-
-namespace mkw::System
-{
-
 #if RMC
+
+namespace wwfc::mkw::System
+{
 
 class RaceConfig
 {
@@ -20,6 +18,24 @@ public:
     enum BattleType {
         BalloonBattle = 0,
         CoinRunners = 1,
+    };
+
+    class Player
+    {
+    public:
+        enum class Type {
+            Master = 0, // a.k.a RealLocal
+            CPU = 1,
+            Unknown = 2,
+            Ghost = 3,
+            Remote = 4,
+            None = 5,
+        };
+
+        FILL(0x00, 0x05);
+        /* 0x05 */ u8 m_localPlayerId;
+        FILL(0x06, 0x10);
+        /* 0x10 */ Type m_type;
     };
 
     class Scenario
@@ -45,6 +61,15 @@ public:
         bool isCoinRunners() const
         {
             return m_battleType == BattleType::CoinRunners;
+        }
+
+        Player* getPlayer(int index)
+        {
+            [[gnu::longcall]] Player* getPlayer(Scenario * scenario, int index)
+                AT(RMCXD_PORT(
+                    0x8052E434, 0x805298EC, 0x8052DDB4, 0x8051C48C, DEMOTODO
+                ));
+            return getPlayer(this, index);
         }
 
     private:
@@ -78,12 +103,13 @@ private:
     /* 0x0C10 */ Scenario m_menuScenario;
     /* 0x1800 */ u8 _1800[0x73F0 - 0x1800];
 
-    static RaceConfig* s_instance
-        AT(RMCXD_PORT(0x809BD728, 0x809B8F68, 0x809BC788, 0x809ABD68));
+    static RaceConfig* s_instance AT(
+        RMCXD_PORT(0x809BD728, 0x809B8F68, 0x809BC788, 0x809ABD68, DEMOTODO)
+    );
 };
 
 static_assert(sizeof(RaceConfig) == 0x73F0);
 
-#endif
+} // namespace wwfc::mkw::System
 
-} // namespace mkw::System
+#endif

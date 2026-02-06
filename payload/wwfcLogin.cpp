@@ -2,10 +2,10 @@
 #include "import/gamespy.h"
 #include "import/revolution.h"
 #include "wwfcHostPlatform.hpp"
+#include "wwfcLibC.hpp"
 #include "wwfcLog.hpp"
 #include "wwfcPatch.hpp"
 #include "wwfcPayload.hpp"
-#include <cstring>
 
 namespace wwfc::Login
 {
@@ -13,11 +13,11 @@ namespace wwfc::Login
 int gpiSendLoginHook( //
     GameSpy::GPConnection* connection, GameSpy::GPIConnectData* data,
     GameSpy::GPIBuffer* outputBuffer
-) asm("gpiSendLoginHook");
+);
 
 int gpiAddLocalInfoHook( //
     GameSpy::GPConnection* connection, GameSpy::GPIBuffer* outputBuffer
-) asm("gpiAddLocalInfoHook");
+);
 
 static void SendExtendedLogin( //
     GameSpy::GPConnection* connection, const char* authToken,
@@ -38,38 +38,38 @@ void Init()
     }
 }
 
-WWFC_DEFINE_PATCH = {
-    Patch::CallWithCTR(
-        WWFC_PATCH_LEVEL_CRITICAL, //
-        ADDRESS_PATCH_GPISENDLOGIN, // 0x801007B0
-        ASM_LAMBDA(
-            // clang-format off
+WWFC_DEFINE_PATCH = Patch::CallWithCTR(
+    WWFC_PATCH_LEVEL_CRITICAL, //
+    ADDRESS_PATCH_GPISENDLOGIN, // 0x801007B0
+    ASM_LAMBDA(
+        ( : ASM_IMPORT(i, gpiSendLoginHook)),
+        // clang-format off
             mr      r3, r28;
             mr      r4, r29;
             addi    r5, r30, 0x210;
-            b       gpiSendLoginHook;
-            // clang-format on
-        )
-    ),
-    Patch::CallWithCTR(
-        // For the DNS patch method
-        WWFC_PATCH_LEVEL_SUPPORT,
-        ADDRESS_PATCH_GPIADDLOCALINFO, // 0x801021C0
-        ASM_LAMBDA(
-            // clang-format off
+            b       %[gpiSendLoginHook];
+        // clang-format on
+    )
+);
+WWFC_DEFINE_PATCH = Patch::CallWithCTR(
+    // For the DNS patch method
+    WWFC_PATCH_LEVEL_SUPPORT,
+    ADDRESS_PATCH_GPIADDLOCALINFO, // 0x801021C0
+    ASM_LAMBDA(
+        ( : ASM_IMPORT(i, gpiAddLocalInfoHook)),
+        // clang-format off
             mr      r3, r28;
             mr      r4, r29;
             mflr    r31;
-            bl      gpiAddLocalInfoHook;
+            bl      %[gpiAddLocalInfoHook];
             mtlr    r31;
-            lwz     r31, 0x1C(sp);
-            lwz     r30, 0x18(sp);
-            lwz     r29, 0x14(sp);
+            lwz     r31, 0x1C(r1);
+            lwz     r30, 0x18(r1);
+            lwz     r29, 0x14(r1);
             blr;
-            // clang-format on
-        )
-    ),
-};
+        // clang-format on
+    )
+);
 
 int gpiSendLoginHook(
     GameSpy::GPConnection* connection, GameSpy::GPIConnectData* data,
@@ -115,9 +115,7 @@ void SendExtendedLogin(
         }
     }
 
-    GameSpy::gpiAppendStringToBuffer(
-        connection, outputBuffer, "\\wl:ver\\"
-    );
+    GameSpy::gpiAppendStringToBuffer(connection, outputBuffer, "\\wl:ver\\");
     GameSpy::gpiAppendIntToBuffer(
         connection, outputBuffer, Payload::Header.info.version
     );
@@ -152,7 +150,7 @@ void SendExtendedLogin(
                 RVL::IOS_Close(fd);
             }
         } else {
-            LOG_ERROR_FMT("Failed to open ES: %d", fd);
+            WWFC_LOG_ERROR_FMT("Failed to open ES: %d", fd);
         }
 
         if (usingEspHandle) {
@@ -243,14 +241,14 @@ static void SendAuthTokenSignature(
     static constexpr u32 ES_IOCTL_GET_DEVICE_CERT = 0x1E;
     static constexpr u32 ES_IOCTL_SIGN = 0x30;
 
-    IOSCECCCert eccCert alignas(32) = {};
-    RVL::IOVector vec[3 + 1] alignas(32) = {};
+    alignas(32) IOSCECCCert eccCert = {};
+    alignas(32) RVL::IOVector vec[3 + 1] = {};
 
     vec[0].data = &eccCert;
     vec[0].size = sizeof(IOSCECCCert);
     s32 ret = RVL::IOS_Ioctlv(esFd, ES_IOCTL_GET_DEVICE_CERT, 0, 1, vec);
     if (ret != 0) {
-        LOG_ERROR_FMT("Failed to get device certificate: %d", ret);
+        WWFC_LOG_ERROR_FMT("Failed to get device certificate: %d", ret);
         return;
     }
 
@@ -264,7 +262,7 @@ static void SendAuthTokenSignature(
         !IsZeroBlock(eccCert.publicKeyPad, sizeof(eccCert.publicKeyPad)) ||
         std::memcmp(eccCert.name, "NG", 2) ||
         !IsZeroBlock(eccCert.name + 0xA, 0x40 - 0xA)) {
-        LOG_ERROR("Invalid device certificate");
+        WWFC_LOG_ERROR("Invalid device certificate");
         return;
     }
 
@@ -274,7 +272,7 @@ static void SendAuthTokenSignature(
     if (authSig.caId == 0 || authSig.msId == 0 ||
         std::memcmp(eccCert.issuer, "Root-CA", 7) ||
         std::memcmp(eccCert.issuer + 0xF, "-MS", 3)) {
-        LOG_ERROR("Invalid device certificate issuer");
+        WWFC_LOG_ERROR("Invalid device certificate issuer");
         return;
     }
 
@@ -288,8 +286,8 @@ static void SendAuthTokenSignature(
     std::memcpy(appIssuer + 0x1B, eccCert.name, 0xA);
 
     // Now call ES sign
-    u8 eccSignature[0x3C + 0x4] alignas(32) = {};
-    char authTokenAligned[GP_AUTHTOKEN_LEN] alignas(64) = {};
+    alignas(32) u8 eccSignature[0x3C + 0x4] = {};
+    alignas(64) char authTokenAligned[GP_AUTHTOKEN_LEN] = {};
 
     s32 authTokenSize = std::strlen(authToken);
     if (authTokenSize > GP_AUTHTOKEN_LEN) {
@@ -308,7 +306,7 @@ static void SendAuthTokenSignature(
 
     ret = RVL::IOS_Ioctlv(esFd, ES_IOCTL_SIGN, 1, 2, vec);
     if (ret != 0) {
-        LOG_ERROR_FMT("Failed to sign auth token: %d", ret);
+        WWFC_LOG_ERROR_FMT("Failed to sign auth token: %d", ret);
         return;
     }
 
@@ -320,13 +318,13 @@ static void SendAuthTokenSignature(
         !IsZeroBlock(eccCert.publicKeyPad, sizeof(eccCert.publicKeyPad)) ||
         std::memcmp(eccCert.name, "AP", 2) ||
         !IsZeroBlock(eccCert.name + 0x12, 0x40 - 0x12)) {
-        LOG_ERROR("Invalid app certificate");
+        WWFC_LOG_ERROR("Invalid app certificate");
         return;
     }
 
     if (std::memcmp(eccCert.issuer, appIssuer, 0x25) ||
         !IsZeroBlock(eccCert.issuer + 0x25, 0x40 - 0x25)) {
-        LOG_ERROR("Invalid app certificate issuer");
+        WWFC_LOG_ERROR("Invalid app certificate issuer");
         return;
     }
 
@@ -340,8 +338,10 @@ static void SendAuthTokenSignature(
         &authSig, sizeof(authSig), b64AuthSig, sizeof(b64AuthSig)
     );
     if (b64Len == -1 || b64Len == sizeof(b64AuthSig)) {
-        LOG_ERROR("Could not fit the base64-encoded signature into the "
-                  "provided buffer!");
+        WWFC_LOG_ERROR(
+            "Could not fit the base64-encoded signature into the "
+            "provided buffer!"
+        );
         return;
     }
 
@@ -356,22 +356,22 @@ static void SendAuthTokenSignature(
 
 // Always check if the SAKE server has the latest friend info, as it can get
 // outdated when switching between servers (such as Wiimmfi)
-WWFC_DEFINE_PATCH = {Patch::WriteASM(
+WWFC_DEFINE_PATCH = Patch::WriteASM(
     WWFC_PATCH_LEVEL_SUPPORT | WWFC_PATCH_LEVEL_BUGFIX, //
-    RMCXD_PORT(0x80672FCC, 0x8066B868, 0x80672638, 0x80661324), //
-    1, ASM_LAMBDA(b 0x70)
-)};
+    RMCXD_PORT(0x80672FCC, 0x8066B868, 0x80672638, 0x80661324, DEMOTODO), //
+    1, ASM_LAMBDA((), b 0x70)
+);
 
 #endif
 
 #if RMCN
 
 // Same patch as above but for the Mario Kart Channel
-WWFC_DEFINE_PATCH = {Patch::WriteASM(
+WWFC_DEFINE_PATCH = Patch::WriteASM(
     WWFC_PATCH_LEVEL_SUPPORT | WWFC_PATCH_LEVEL_BUGFIX, //
     RMCXN_PORT(0x801FD08C, 0x801FCFEC, 0x801FCE24, 0x801FD87C), //
-    1, ASM_LAMBDA(b 0x6C)
-)};
+    1, ASM_LAMBDA((), b 0x6C)
+);
 
 #endif
 
@@ -380,11 +380,11 @@ WWFC_DEFINE_PATCH = {Patch::WriteASM(
 // Remove the needless wait during the login friend process. It doesn't seem to
 // make a difference now due to the fast way we handle friend authorization.
 // TODO: This could apply to other games as well
-WWFC_DEFINE_PATCH = {Patch::WriteASM(
+WWFC_DEFINE_PATCH = Patch::WriteASM(
     WWFC_PATCH_LEVEL_SUPPORT, //
-    RMCXD_PORT(0x800CE710, 0x800CE670, 0x800CE630, 0x800CE770), //
-    1, ASM_LAMBDA(nop)
-)};
+    RMCXD_PORT(0x800CE710, 0x800CE670, 0x800CE630, 0x800CE770, DEMOTODO), //
+    1, ASM_LAMBDA((), nop)
+);
 
 #endif
 

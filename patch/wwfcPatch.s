@@ -1,5 +1,6 @@
 #include "gct.h"
 #include <wwfcError.h>
+#include <wwfcConstants.h>
 
 // The stage 1 payload is downloaded from the server and verified using its MD5
 // hash, preventing it from ever being updated, essentially making it an
@@ -10,16 +11,6 @@
 // rely on it anyway, but it's the only thing that's really universally shared
 // across every game.
 
-#ifndef WWFC_DOMAIN
-
-#  ifdef PROD
-#    define WWFC_DOMAIN "nwfc.wiinoma.com"
-#  else
-#    define WWFC_DOMAIN "nwfc.wiinoma.com" // Points to localhost
-#  endif
-
-#endif
-
 #define IBAT4U 560
 #define IBAT4L 561
 #define SRR0 26
@@ -28,9 +19,11 @@
 #ifndef NEEDS_IBAT_CONFIG
 
 // Actually just blacklist known working games
-#if RMCED00 | RMCJD00 | RMCKD00 | RMCPD00 | \
+#if RMCED00 | RMCJD00 | RMCKD00 | RMCPD00 | DABJD00 | \
     RSBED01 | RSBED02 | RSBJD00 | RSBJD01 | RSBPD00 | RSBPD01 | \
-    RTYPD00 | R4QED01 | R4QJD00 | R4QPD01 | R4QPD02 | WASJN0001
+    RTYPD00 | R4QED01 | R4QJD00 | R4QPD01 | R4QPD02 | WASJN0001 | \
+    RWEED00 | RWEPD00
+
 #  define NEEDS_IBAT_CONFIG 0
 #else
 #  define NEEDS_IBAT_CONFIG 1
@@ -208,6 +201,7 @@ L_HashMatched:
 
     // Leave the auth function
     /* 0x54 */ HC(GCT_STRING_B_CALL, ADDRESS_AUTH_HANDLERESP_OUT) // 0x800EEB54
+    // ^^^ Not reached
 
 L_CustomAllocator:
 #if WUNEN0005
@@ -293,7 +287,7 @@ GCT_STRING_END(AvailableURLOverride)
 
 
 GCT_STRING(ADDRESS_NASWII_AC_URL + 0x4, AuthURLOverride) // 0x8027A42C
-    .ascii  "://nas." WWFC_DOMAIN "/w0\0"
+    .ascii  "://nas." WWFC_DOMAIN "/w1\0"
 GCT_STRING_END(AuthURLOverride)
 
 

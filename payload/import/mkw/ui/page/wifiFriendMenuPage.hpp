@@ -1,19 +1,20 @@
 #pragma once
 
-#include "openHostPage.hpp"
-
-namespace mkw::UI
-{
-
 #if RMC
+
+#  include "openHostPage.hpp"
+
+namespace wwfc::mkw::UI
+{
 
 class WifiFriendMenuPage : public OpenHostPage
 {
 public:
     void onActivate() override
     {
-        LONGCALL void onActivate(WifiFriendMenuPage * wifiFriendMenuPage)
-            AT(RMCXD_PORT(0x8064CF18, 0x80619C04, 0x8064C584, 0x8063B230));
+        [[gnu::longcall]] void onActivate(WifiFriendMenuPage * wifiFriendMenuPage) AT(
+            RMCXD_PORT(0x8064CF18, 0x80619C04, 0x8064C584, 0x8063B230, DEMOTODO)
+        );
 
         onActivate(this);
 
@@ -22,8 +23,9 @@ public:
 
     void onDeactivate() override
     {
-        LONGCALL void onDeactivate(WifiFriendMenuPage * wifiFriendMenuPage)
-            AT(RMCXD_PORT(0x8064CFF8, 0x80619CE4, 0x8064C664, 0x8063B310));
+        [[gnu::longcall]] void onDeactivate(WifiFriendMenuPage * wifiFriendMenuPage) AT(
+            RMCXD_PORT(0x8064CFF8, 0x80619CE4, 0x8064C664, 0x8063B310, DEMOTODO)
+        );
 
         onDeactivate(this);
 
@@ -32,8 +34,9 @@ public:
 
     void onRefocus() override
     {
-        LONGCALL void Page_onRefocus(Page * page)
-            AT(RMCXD_PORT(0x805BB228, 0x805B5668, 0x805BABA8, 0x805A9280));
+        [[gnu::longcall]] void Page_onRefocus(Page * page) AT(
+            RMCXD_PORT(0x805BB228, 0x805B5668, 0x805BABA8, 0x805A9280, DEMOTODO)
+        );
 
         Page_onRefocus(this);
 
@@ -45,12 +48,6 @@ private:
 };
 
 static_assert(sizeof(WifiFriendMenuPage) == 0xF34);
-
-#endif
-
-} // namespace mkw::UI
-
-#if RMC
 
 extern "C" {
 static void
@@ -72,4 +69,6 @@ WifiFriendMenu_onRefocus(mkw::UI::WifiFriendMenuPage* wifiFriendMenuPage)
 }
 }
 
-#endif
+} // namespace wwfc::mkw::UI
+
+#endif // RMC

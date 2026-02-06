@@ -16,8 +16,31 @@ Working with Python 3.10. Use make.sh -all to generate all content.
 > [!IMPORTANT]  
 > This wwfc repo has been modified to use custom server name branding. You may want to modify the source to revert those changes, or cherry pick only the commits you want.
 
+# Building
+
+You need:
+
+- Python 3.11+ with the `cryptography` module
+- devkitPPC
+- A domain name under which your WWFC server will be reachable (`${DOMAIN}`)
+
+To build everything, run the make script:
+
+```sh
+./make.sh --all -- -j8 -DWWFC_DOMAIN=\"${DOMAIN}\"
+```
+
+The script will create a directory `dist/` which contains the payload files necessary to run the server. Copy those files into a `payload/` directory located next to your `wwfc` binary.
+
+The gecko codes will be located in the `patch/build/` directory as `.txt` files.
+
 # License
 Unless a file explicitly states otherwise, everything in this repository is licensed under a custom BSD-style
 license detailed in the [LICENSE](LICENSE) file. The purpose of this license is to allow easy integration into
 permissively licensed projects, while requiring strict attribution to discourage implementation into the existing
 closed-source, proprietary environment.
+
+The above license may not be compatible with copyleft licenses such as the GPL. For this reason, this software
+is also made available under the GNU General Public License version 2 (or any later version). You may choose the terms
+of the above license or the GPL, but not both. A copy of the GPL version 2 is available online at:
+https://www.gnu.org/licenses/gpl-2.0
